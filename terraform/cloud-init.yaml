@@ -1,0 +1,44 @@
+#cloud-config
+users:
+  - name: ${user}
+    groups: users, admin, docker
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+packages:
+  - fail2ban
+  - ufw
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
+package_update: true
+package_upgrade: true
+runcmd:
+  - mkdir -p /mnt/db
+  - mount /dev/sdb /mnt/db
+  - echo "/dev/sdb /mnt/db ext4 defaults,nofail 0 2" >> /etc/fstab
+  - printf "[sshd]\nenabled = true\nbanaction = iptables-multiport" > /etc/fail2ban/jail.local
+  - systemctl enable fail2ban
+  - ufw allow OpenSSH
+  - ufw enable
+  - sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
+  - sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
+  - sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
+  - sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
+  - sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
+  - sed -i '$a AllowUsers ${user}' /etc/ssh/sshd_config
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+  - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  - apt-get update
+  - apt-get install -y docker-ce
+  - systemctl start docker
+  - systemctl enable docker
+  - usermod -aG docker ${user}
+  - systemctl restart sshd
+  - reboot
