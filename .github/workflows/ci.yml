@@ -1,0 +1,43 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    # paths:
+    #   - "docker-compose.infra.yml"
+    #   - ".github/workflows/ci.yml"
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      - name: Copy files to server
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER "
+            mkdir -p ~/echopages/infra
+          "
+          scp -o StrictHostKeyChecking=no docker-compose.infra.yml $DEPLOY_USER@$DEPLOY_SERVER:~/echopages/infra/docker-compose.infra.yml
+          scp -o StrictHostKeyChecking=no infra.env $DEPLOY_USER@$DEPLOY_SERVER:~/echopages/infra/infra.env
+          scp -r -o StrictHostKeyChecking=no monitoring-config $DEPLOY_USER@$DEPLOY_SERVER:~/echopages/infra/monitoring-config
+      - name: Deploy to server
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          GRAFANA_ADMIN_USER: ${{ secrets.GRAFANA_ADMIN_USER }}
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+        run: |
+          ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER "
+            echo 'GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}' >> ~/echopages/infra/infra.env;  
+            echo 'GRAFANA_ADMIN_USER=${{ secrets.GRAFANA_ADMIN_USER }}' >> ~/echopages/infra/infra.env;
+            docker compose -f ~/echopages/infra/docker-compose.infra.yml --env-file ~/echopages/infra/infra.env up -d;
+          "
