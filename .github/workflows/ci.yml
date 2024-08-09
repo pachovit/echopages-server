@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-    # paths:
-    #   - "docker-compose.infra.yml"
-    #   - ".github/workflows/ci.yml"
+    paths:
+      - "docker-compose.infra.yml"
+      - "infra.env"
+      - "monitoring-config/**"
+      - ".github/workflows/ci.yml"
 
 jobs:
 
