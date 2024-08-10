@@ -30,7 +30,7 @@ jobs:
           "
           scp -o StrictHostKeyChecking=no docker-compose.infra.yml $DEPLOY_USER@$DEPLOY_SERVER:~/echopages/infra/docker-compose.infra.yml
           scp -o StrictHostKeyChecking=no infra.env $DEPLOY_USER@$DEPLOY_SERVER:~/echopages/infra/infra.env
-          scp -r -o StrictHostKeyChecking=no monitoring-config $DEPLOY_USER@$DEPLOY_SERVER:~/echopages/infra/monitoring-config
+          scp -r -o StrictHostKeyChecking=no monitoring-config $DEPLOY_USER@$DEPLOY_SERVER:~/echopages/infra/
       - name: Deploy to server
         env:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
