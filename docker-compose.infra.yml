@@ -1,24 +1,4 @@
 services:
-  traefik:
-    image: traefik:v2.9
-    container_name: traefik
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=monitoring@pachovit.com"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-    ports:
-      - "80:80"         # HTTP
-      - "443:443"       # HTTPS
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${INFRA_DIR}/letsencrypt:/letsencrypt
-    networks:
-      - monitoring-network
-
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -29,12 +9,14 @@ services:
       - "traefik.http.routers.grafana.entrypoints=websecure"
       - "traefik.http.routers.grafana.tls.certresolver=myresolver"
     networks:
-      - monitoring-network
+      - echopages
     depends_on:
       - loki
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - ${INFRA_DIR}/monitoring-config/grafana/provisioning:/etc/grafana/provisioning
 
   loki:
     image: grafana/loki:latest
@@ -43,7 +25,7 @@ services:
     volumes:
       - ${INFRA_DIR}/monitoring-config/loki.yml:/etc/loki/local-config.yaml
     networks:
-      - monitoring-network
+      - echopages
 
   promtail:
     image: grafana/promtail:latest
@@ -54,7 +36,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${INFRA_DIR}/monitoring-config/promtail.yml:/etc/promtail/config.yml
     networks:
-      - monitoring-network
+      - echopages
 
 networks:
-  monitoring-network:
+  echopages:
+    external: true
