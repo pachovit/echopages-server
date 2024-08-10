@@ -15,17 +15,14 @@
         }
       ]
     },
-    "editable": true,
+    "editable": false,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
     "id": 1,
     "links": [],
     "panels": [
       {
-        "datasource": {
-          "type": "loki",
-          "uid": "eduehvwu4bp4we"
-        },
+        "datasource": "Loki",
         "fieldConfig": {
           "defaults": {
             "color": {
@@ -92,10 +89,7 @@
         "pluginVersion": "11.1.3",
         "targets": [
           {
-            "datasource": {
-              "type": "loki",
-              "uid": "eduehvwu4bp4we"
-            },
+            "datasource": "Loki",
             "editorMode": "builder",
             "expr": "{container=\"echopages\"} |= ``",
             "queryType": "range",

@@ -17,7 +17,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - ${INFRA_DIR}/monitoring-config/grafana/provisioning:/etc/grafana/provisioning
-      - ${INFRA_DIR}/monitoring-config/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ${INFRA_DIR}/monitoring-config/grafana/grafana.ini:/etc/grafana/grafana.ini 
+      - ${INFRA_DIR}/monitoring-config/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
 
   loki:
     image: grafana/loki:latest
